@@ -3,6 +3,8 @@ package com.personal.books.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 public class Book {
@@ -20,5 +22,9 @@ public class Book {
     private String language;
 
     private String Format;
+
+    private LocalDate finishDate;
+
+    private int readingTimeInDays;
 
 }
