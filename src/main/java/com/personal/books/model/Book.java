@@ -21,7 +21,7 @@ public class Book {
 
     private String language;
 
-    private String Format;
+    private String format;
 
     private LocalDate finishDate;
 
