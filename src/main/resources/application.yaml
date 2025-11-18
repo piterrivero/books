@@ -2,7 +2,7 @@ spring:
   application:
     name: books
 
-springdoc:
-  swagger-ui:
-    try-it-out-enabled: false
-    supported-submit-methods: []
+#springdoc:
+#  swagger-ui:
+#    try-it-out-enabled: false
+#    supported-submit-methods: []
