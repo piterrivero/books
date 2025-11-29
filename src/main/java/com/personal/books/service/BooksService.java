@@ -1,28 +1,115 @@
 package com.personal.books.service;
 
-import com.personal.books.enums.Format;
-import com.personal.books.model.Book;
+import com.personal.books.dto.BookDto;
+import com.personal.books.mapper.BookMapper;
+import com.personal.books.repository.BookRepository;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class BooksService {
 
-    public List<Book> getAllBooks() {
-        return Arrays.asList(
-            Book.builder().id(1L).title("The Great Gatsby").author("F. Scott Fitzgerald").publicationYear(1925).readYear(2023).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2020, 1, 15)).build(),
-            Book.builder().id(2L).title("To Kill a Mockingbird").author("Harper Lee").publicationYear(1960).readYear(2022).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2020, 3, 22)).build(),
-            Book.builder().id(3L).title("1984").author("George Orwell").publicationYear(1949).readYear(2023).language("English").format(Format.EBOOK.name()).finishDate(LocalDate.of(2020, 5, 10)).build(),
-            Book.builder().id(4L).title("Pride and Prejudice").author("Jane Austen").publicationYear(1813).readYear(2021).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2020, 7, 8)).build(),
-            Book.builder().id(5L).title("The Catcher in the Rye").author("J.D. Salinger").publicationYear(1951).readYear(2022).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2020, 9, 14)).build(),
-            Book.builder().id(6L).title("Lord of the Flies").author("William Golding").publicationYear(1954).readYear(2023).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2020, 11, 25)).build(),
-            Book.builder().id(7L).title("The Lord of the Rings").author("J.R.R. Tolkien").publicationYear(1954).readYear(2021).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2021, 2, 18)).build(),
-            Book.builder().id(8L).title("Harry Potter and the Sorcerer's Stone").author("J.K. Rowling").publicationYear(1997).readYear(2020).language("English").format(Format.EBOOK.name()).finishDate(LocalDate.of(2021, 4, 30)).build(),
-            Book.builder().id(9L).title("The Hobbit").author("J.R.R. Tolkien").publicationYear(1937).readYear(2022).language("English").format(Format.PAPERBACK.name()).finishDate(LocalDate.of(2021, 7, 12)).build(),
-            Book.builder().id(10L).title("Brave New World").author("Aldous Huxley").publicationYear(1932).readYear(2023).language("English").format(Format.EBOOK.name()).finishDate(LocalDate.of(2021, 10, 5)).build()
-        );
+    private final BookMapper bookMapper;
+    private final BookRepository bookRepository;
+
+    public List<BookDto> getAllBooks() {
+        return bookRepository.findAll().stream()
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
     }
+
+    public BookDto getBookById(Long id) {
+        com.personal.books.model.Book book = bookRepository.findById(id);
+        return book != null ? bookMapper.toDto(book) : null;
+    }
+
+    public BookDto createBook(BookDto bookDto) {
+        com.personal.books.model.Book book = bookMapper.toModel(bookDto);
+        book.setId(getNextId());
+        com.personal.books.model.Book savedBook = bookRepository.save(book);
+        return bookMapper.toDto(savedBook);
+    }
+
+    private Long getNextId() {
+        return bookRepository.findAll().stream()
+                .mapToLong(com.personal.books.model.Book::getId)
+                .max()
+                .orElse(0L) + 1;
+    }
+
+    public int uploadBooksFromCsv(org.springframework.web.multipart.MultipartFile file) throws Exception {
+        java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(file.getInputStream()));
+        String line;
+        int count = 0;
+        int lineNumber = 0;
+        
+        while ((line = reader.readLine()) != null) {
+            lineNumber++;
+            if (line.trim().isEmpty()) {
+                System.out.println("Skipping empty line " + lineNumber);
+                continue;
+            }
+            
+            try {
+                String[] fields = parseCsvLine(line);
+                System.out.println("Line " + lineNumber + ": " + fields.length + " fields - " + line);
+                
+                if (fields.length >= 6) {
+                    com.personal.books.model.Book book = com.personal.books.model.Book.builder()
+                        .id(getNextId())
+                        .title(fields[0].trim())
+                        .publicationYear(Integer.parseInt(fields[1].trim()))
+                        .readYear(Integer.parseInt(fields[2].trim()))
+                        .author(fields[3].trim())
+                        .language(fields[4].trim())
+                        .format(fields[5].trim())
+                        .build();
+                    
+                    bookRepository.save(book);
+                    count++;
+                    System.out.println("Successfully saved book: " + fields[0].trim());
+                } else {
+                    System.out.println("Insufficient fields (" + fields.length + ") in line " + lineNumber + ": " + line);
+                }
+            } catch (Exception e) {
+                System.out.println("Error processing line " + lineNumber + ": " + line + " - " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        reader.close();
+        System.out.println("Total lines processed: " + lineNumber + ", Books saved: " + count);
+        return count;
+    }
+    
+    private String[] parseCsvLine(String line) {
+        java.util.List<String> fields = new java.util.ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder field = new StringBuilder();
+        
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ';' && !inQuotes) {
+                fields.add(field.toString());
+                field = new StringBuilder();
+            } else {
+                field.append(c);
+            }
+        }
+        fields.add(field.toString());
+        return fields.toArray(new String[0]);
+    }
+
+    public Long getBooksCount() {
+        return (long) bookRepository.findAll().size();
+    }
+
+
+
+
 }

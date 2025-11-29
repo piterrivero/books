@@ -1,25 +1,16 @@
-package com.personal.books.model;
+package com.personal.books.dto;
 
+import com.personal.books.enums.Format;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.time.LocalDate;
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@DynamoDbBean
-@Schema(description = "Book entity representing a book in the personal collection")
-public class Book {
+@Schema(description = "Book DTO for API operations")
+public class BookDto {
 
-    @Schema(description = "Unique identifier of the book", example = "1")
-    private Long id;
+
 
     @Schema(description = "Title of the book", example = "The Great Gatsby")
     private String title;
@@ -36,17 +27,12 @@ public class Book {
     @Schema(description = "Language of the book", example = "English")
     private String language;
 
-    @Schema(description = "Format of the book", example = "PAPERBACK", allowableValues = {"PAPERBACK", "EBOOK"})
-    private String format;
+    @Schema(description = "Format of the book", example = "PAPERBACK")
+    private Format format;
 
     @Schema(description = "Date when the book was finished", example = "2020-01-15")
     private LocalDate finishDate;
 
     @Schema(description = "Number of days it took to read the book", example = "14")
     private int readingTimeInDays;
-
-    @DynamoDbPartitionKey
-    public Long getId() {
-        return id;
-    }
 }
