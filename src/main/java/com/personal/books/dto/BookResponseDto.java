@@ -7,10 +7,11 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-@Schema(description = "Book DTO for API operations")
-public class BookDto {
+@Schema(description = "Book response DTO for API operations")
+public class BookResponseDto {
 
-
+    @Schema(description = "Unique identifier of the book", example = "1")
+    private Long id;
 
     @Schema(description = "Title of the book", example = "The Great Gatsby")
     private String title;

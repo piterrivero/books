@@ -1,6 +1,7 @@
 package com.personal.books.mapper;
 
-import com.personal.books.dto.BookDto;
+import com.personal.books.dto.BookRequestDto;
+import com.personal.books.dto.BookResponseDto;
 import com.personal.books.enums.Format;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,10 +12,13 @@ public interface BookMapper {
 
     @Mapping(target = "format", source = "format", qualifiedByName = "enumToString")
     @Mapping(target = "id", ignore = true)
-    com.personal.books.model.Book toModel(BookDto dto);
+    @Mapping(target = "finishDate", ignore = true)
+    @Mapping(target = "readingTimeInDays", ignore = true)
+    @Mapping(target = "readYear", ignore = true)
+    com.personal.books.model.Book toModel(BookRequestDto dto);
 
     @Mapping(target = "format", source = "format", qualifiedByName = "stringToEnum")
-    BookDto toDto(com.personal.books.model.Book model);
+    BookResponseDto toResponseDto(com.personal.books.model.Book model);
 
     @Named("enumToString")
     default String mapEnumToString(Format format) {

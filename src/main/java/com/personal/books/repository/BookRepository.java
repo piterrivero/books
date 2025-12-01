@@ -1,7 +1,7 @@
 package com.personal.books.repository;
 
 import com.personal.books.model.Book;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -11,13 +11,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
-@AllArgsConstructor
 public class BookRepository {
 
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
+    
+    @Value("${aws.dynamodb.table-name}")
+    private String tableName;
+    
+    public BookRepository(DynamoDbEnhancedClient dynamoDbEnhancedClient) {
+        this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
+    }
 
     private DynamoDbTable<Book> getTable() {
-        return dynamoDbEnhancedClient.table("books", TableSchema.fromBean(Book.class));
+        return dynamoDbEnhancedClient.table(tableName, TableSchema.fromBean(Book.class));
     }
 
     public List<Book> findAll() {
