@@ -9,4 +9,4 @@ aws:
   region: eu-central-1
   profile: books-project
   dynamodb:
-    table-name: books
+    table-name: booksdevs
